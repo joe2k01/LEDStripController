@@ -2,13 +2,14 @@
 #include <BlynkSimpleEsp8266.h>
 #include "config.h"
 #include <FastLED.h>
-#define LEDs 30
+#define LEDs 31
 #define DIN 2
 
 CRGB leds[LEDs];
 BlynkTimer timer;
 
 int s = 0;
+bool increase = true;
 int rainbowTimer;
 
 void rainbowHandler();
@@ -16,12 +17,16 @@ void rainbowHandler();
 void setup()
 {
   FastLED.addLeds<NEOPIXEL, DIN>(leds, LEDs);
+  fill_solid(&leds[0], LEDs, CRGB::Red);
+  FastLED.show();
 
   Blynk.begin(TOKEN, APNAME, PWD);
 
   rainbowTimer = timer.setInterval(1L, rainbowHandler);
   timer.disable(rainbowTimer);
 
+  fill_solid(&leds[0], LEDs, CRGB::Black);
+  FastLED.show();
   Blynk.virtualWrite(V1, LOW);
 }
 
@@ -35,9 +40,14 @@ void rainbowHandler() {
    fill_rainbow(&leds[0], LEDs, s);
    FastLED.show();
    FastLED.delay(2);
-   s++;
+   if (increase)
+     s++;
+   else
+     s--;
    if (s == 224)
-      s = 0;
+     increase = false;
+   else if (s == 0)
+     increase = true;
 }
 
 BLYNK_WRITE(V1) {
@@ -75,8 +85,6 @@ BLYNK_WRITE(V2) {
           colour = leds[j];
           leds[j] = colour;
         }
-      FastLED.show();
-      FastLED.delay(2);
       FastLED.show();
       FastLED.delay(2);
       }
